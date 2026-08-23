@@ -1,28 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
-    <color name="divider">#dedede</color>
-
-    <color name="openAction">#6db6ff</color>
-    <color name="contextMenuTitle">#000000</color>
-
-    <color name="progressBar">#FF4081</color>
-    <color name="progressBarDark">#85ff4081</color>
-
-    <color name="infoBarBorder">#757575</color>
-
-    <color name="dividerSearchEngineList">#20000000</color>
-
-    <color name="preference_fallback_accent_color">@color/colorAccent</color>
-
-    <color name="list_item_background">#FFF</color>
-    <color name="background">@color/material_grey_50</color>
-    <color name="background_list">@color/material_grey_50</color>
-
-    <color name="upload_image_mask">#80FFFFFF</color>
-
-    <color name="secondary_text_default_material">#8a000000</color>
-
+    <color name="icon_background">#111A3A</color>
 </resources>

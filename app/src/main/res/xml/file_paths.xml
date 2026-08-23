@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<paths>
-    <cache-path name="images" path="images/"/>
-    <external-cache-path name="images" path="images/"/>
-    <external-path name="downloaded" path="Pictures/SearchByImage/"/>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <cache-path
+        name="search_images"
+        path="search-images/" />
 </paths>

@@ -1,12 +1,15 @@
 *.iml
 .gradle
+/.kotlin/
+/.gradle-user-home/
 /local.properties
 /.idea/workspace.xml
 /.idea/libraries
 .DS_Store
 /build
+/app/build/
 /captures
 *.apk
 .idea/
-gradle.properties
 google-services.json
+/.recycle-bin/

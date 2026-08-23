@@ -1,6 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat" />
-    <style name="AppTheme.BottomSheetDialog" parent="@style/Theme.Design.BottomSheetDialog"/>
-
+    <style name="Theme.SearchByImage" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#080D20</item>
+        <item name="android:navigationBarColor">#080D20</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
 </resources>

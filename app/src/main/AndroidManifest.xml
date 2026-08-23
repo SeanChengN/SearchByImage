@@ -1,101 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="rikka.searchbyimage"
-          xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission
-        android:name="android.permission.VIBRATE"
-        android:maxSdkVersion="18"/>
-    <!-- Get permission for reliable local dispatching on non-Google Play devices. -->
-    <!-- <uses-permission android:name="android.permission.WAKE_LOCK" /> -->
+    <queries>
+        <package android:name="com.google.android.googlequicksearchbox" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
 
-    <uses-permission android:name="com.android.vending.BILLING"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
-        android:name=".Application"
-        android:allowBackup="true"
-        android:fullBackupContent="@xml/backup_scheme"
-        android:icon="@mipmap/ic_launcher"
+        android:name=".SearchByImageApplication"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@drawable/ic_app_icon"
         android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme.NoActionBar">
-
-        <!-- Add the following meta-data for devices running Google Play service. -->
-        <!--
-            <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
-        -->
+        android:theme="@style/Theme.SearchByImage"
+        android:usesCleartextTraffic="false"
+        tools:targetApi="33">
 
         <activity
-            android:name=".ui.UploadActivity"
-            android:label="@string/share_action_name"
-            android:theme="@style/AppTheme.Transparent">
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.SearchByImage">
             <intent-filter>
-                <action android:name="android.intent.action.SEND"/>
-
-                <category android:name="android.intent.category.DEFAULT"/>
-
-                <data android:mimeType="image/*"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-            <intent-filter>
-                <action android:name="${applicationId}.intent.action.NEW_UPLOAD"/>
-            </intent-filter>
-            <meta-data android:name="android.app.shortcuts"
-                       android:resource="@xml/shortcuts" />
-        </activity>
-        <activity
-            android:name=".ui.DonateActivity"
-            android:label="@string/donate"/>
-        <activity android:name=".ui.ResultActivity"/>
-        <activity android:name=".ui.WebViewActivity"/>
-        <activity android:name=".ui.IqdbResultActivity"/>
-        <activity android:name=".ui.ChromeCustomTabsActivity"/>
-        <activity
-            android:name=".ui.SendReportActivity"
-            android:theme="@style/AppTheme.Transparent">
-            <intent-filter>
-                <action android:name="${applicationId}.SEND_LOG"/>
-
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".ui.EditSitesActivity"
-            android:label="@string/edit_sites"
-            android:theme="@style/AppTheme.NoActionBar"/>
-        <activity
-            android:name=".ui.EditSiteInfoActivity"
-            android:label="@string/edit_site"
-            android:theme="@style/AppTheme.UseColorControlActivated"
-            android:windowSoftInputMode="adjustResize"/>
-
-        <receiver android:name=".receiver.ShareBroadcastReceiver"/>
-        <receiver
-            android:name=".receiver.UploadMessageReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="${applicationId}.intent.action.upload_result"/>
-            </intent-filter>
-        </receiver>
-
-        <service android:name=".service.UploadService"/>
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -104,37 +56,23 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
-                  android:theme="@style/AppTheme.Crop"/>
+        <!-- The app embeds CropImageView directly; the library's deprecated exported activity/provider are unused. -->
+        <activity
+            android:name="com.canhub.cropper.CropImageActivity"
+            tools:node="remove" />
+        <provider
+            android:name="com.canhub.cropper.CropFileProvider"
+            tools:node="remove" />
 
-        <!--
-         Register AnalyticsReceiver and AnalyticsService to support background
-         dispatching on non-Google Play devices.
-        -->
-        <!--
-        <receiver android:name="com.google.android.gms.analytics.AnalyticsReceiver"
-                  android:enabled="true">
-            <intent-filter>
-                <action android:name="com.google.android.gms.analytics.ANALYTICS_DISPATCH" />
-            </intent-filter>
-        </receiver>
-        <service android:name="com.google.android.gms.analytics.AnalyticsService"
-                 android:enabled="true"
-                 android:exported="false"/>
-        -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
 
-
-        <!-- Google Analytics -->
-        <!--
-        <receiver android:name="com.google.android.gms.analytics.CampaignTrackingReceiver"
-                  android:enabled="true"
-                  android:exported="true">
-            <intent-filter>
-                <action android:name="com.android.vending.INSTALL_REFERRER" />
-            </intent-filter>
-        </receiver>
-        <service android:name="com.google.android.gms.analytics.CampaignTrackingService" />
-        -->
+        <receiver
+            android:name="androidx.work.impl.diagnostics.DiagnosticsReceiver"
+            tools:node="remove" />
     </application>
 
 </manifest>
