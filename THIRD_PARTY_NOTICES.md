@@ -5,8 +5,8 @@ The application uses the following primary dependencies. Exact versions are pinn
 | Component | Version | License / project |
 | --- | ---: | --- |
 | AndroidX Core, Activity, Lifecycle, Browser, WorkManager, DataStore, Room | pinned | [Apache License 2.0](https://source.android.com/docs/setup/about/licenses) |
-| Jetpack Compose and Navigation 3 | Compose BOM 2026.08.00 / 1.1.6 | [Apache License 2.0](https://source.android.com/docs/setup/about/licenses) |
-| OkHttp | 5.5.0 | [Apache License 2.0](https://github.com/square/okhttp/blob/master/LICENSE.txt) |
+| Jetpack Compose and Navigation 3 | Compose BOM 2026.04.01 / 1.1.6 | [Apache License 2.0](https://source.android.com/docs/setup/about/licenses) |
+| OkHttp | 5.4.0 | [Apache License 2.0](https://github.com/square/okhttp/blob/master/LICENSE.txt) |
 | Coil Compose / OkHttp | 3.5.0 | [Apache License 2.0](https://github.com/coil-kt/coil/blob/main/LICENSE.txt) |
 | Android Image Cropper | 4.7.0 | [Apache License 2.0](https://github.com/CanHub/Android-Image-Cropper/blob/main/LICENSE.txt) |
 | Kotlin coroutines | 1.11.0 | [Apache License 2.0](https://github.com/Kotlin/kotlinx.coroutines/blob/master/LICENSE.txt) |
