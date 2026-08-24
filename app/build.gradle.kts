@@ -30,8 +30,8 @@ android {
         applicationId = "io.github.seancheng.searchbyimage"
         minSdk = 29
         targetSdk = 36
-        versionCode = 30000
-        versionName = "3.0.0"
+        versionCode = 30001
+        versionName = "3.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
