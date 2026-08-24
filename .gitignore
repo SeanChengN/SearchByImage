@@ -2,6 +2,7 @@
 .gradle
 /.kotlin/
 /.gradle-user-home/
+/.codegraph/
 /local.properties
 /.idea/workspace.xml
 /.idea/libraries
