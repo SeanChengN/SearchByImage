@@ -2,11 +2,14 @@ package io.github.seancheng.searchbyimage.ui
 
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import io.github.seancheng.searchbyimage.AppUiState
 import io.github.seancheng.searchbyimage.EngineItem
 import io.github.seancheng.searchbyimage.MainActivity
@@ -45,7 +48,10 @@ class EnginesScreenTest {
         composeRule.onNodeWithText("SauceNAO").assertDoesNotExist()
 
         composeRule.onNodeWithContentDescription("展开动漫与插画").performClick()
-        composeRule.onNodeWithText("SauceNAO").performScrollTo().assertIsDisplayed()
+        val engineList = composeRule.onNode(hasScrollAction())
+        engineList.performScrollToNode(hasText("SauceNAO"))
+        composeRule.onNodeWithText("SauceNAO").assertIsDisplayed()
+        engineList.performScrollToNode(hasText("动漫与插画"))
         composeRule.onNodeWithContentDescription("折叠动漫与插画").performClick()
         composeRule.onNodeWithText("SauceNAO").assertDoesNotExist()
     }
