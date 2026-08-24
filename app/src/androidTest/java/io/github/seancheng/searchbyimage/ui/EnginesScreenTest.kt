@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import io.github.seancheng.searchbyimage.AppUiState
 import io.github.seancheng.searchbyimage.EngineItem
 import io.github.seancheng.searchbyimage.MainActivity
@@ -44,7 +45,7 @@ class EnginesScreenTest {
         composeRule.onNodeWithText("SauceNAO").assertDoesNotExist()
 
         composeRule.onNodeWithContentDescription("展开动漫与插画").performClick()
-        composeRule.onNodeWithText("SauceNAO").assertIsDisplayed()
+        composeRule.onNodeWithText("SauceNAO").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithContentDescription("折叠动漫与插画").performClick()
         composeRule.onNodeWithText("SauceNAO").assertDoesNotExist()
     }
