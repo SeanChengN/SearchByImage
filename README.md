@@ -25,7 +25,7 @@ io.github.seancheng.searchbyimage
 - Android Gradle Plugin 9.3.1
 - Gradle 9.5.0
 - Kotlin 2.4.10（AGP 内置 Kotlin / Compose 编译插件）
-- `compileSdk` / `targetSdk`: 37
+- `compileSdk` / `targetSdk`: 36
 - `minSdk`: 29
 - Java/Kotlin 字节码目标：17
 
@@ -34,7 +34,7 @@ AGP 9.3 默认使用 Build Tools 36.0.0。Android Studio 自带的 JBR 25 可以
 本机还应在 SDK Manager 中安装：
 
 - Android SDK Command-line Tools (latest)
-- API 29、33、37 的 x86_64 系统镜像
+- API 29、33、36 的 x86_64 系统镜像
 - API 37 Google Play 镜像，用于 Google/Lens 交接测试
 
 ## 构建
@@ -58,7 +58,7 @@ adb shell am start -W -a android.intent.action.MAIN -c android.intent.category.L
 
 `local.properties` 只保存本机 SDK 路径，不应提交。依赖版本集中在 `gradle/libs.versions.toml`，不使用动态版本。
 
-项目仅通过 GitHub Release 分发 APK，不发布到 Google Play。Actions 只在与 `versionName` 匹配的 GitHub Release 发布时触发，先运行单元测试、Release Lint 和 API 29/33/37 仪器测试，再上传已签名 APK及其 SHA-256 校验文件；不生成或发布 AAB。仓库需要配置以下 Actions Secrets：
+项目仅通过 GitHub Release 分发 APK，不发布到 Google Play。Actions 只在与 `versionName` 匹配的 GitHub Release 发布时触发，先运行单元测试、Release Lint 和 API 29/33/36 仪器测试，再上传已签名 APK及其 SHA-256 校验文件；不生成或发布 AAB。API 37 Google Play 镜像继续用于本地 Android 17 与 Google Lens 交接验证。仓库需要配置以下 Actions Secrets：
 
 - `ANDROID_SIGNING_KEYSTORE_BASE64`
 - `ANDROID_SIGNING_STORE_PASSWORD`

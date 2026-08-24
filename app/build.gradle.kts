@@ -24,12 +24,12 @@ plugins {
 
 android {
     namespace = "io.github.seancheng.searchbyimage"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "io.github.seancheng.searchbyimage"
         minSdk = 29
-        targetSdk = 37
+        targetSdk = 36
         versionCode = 30000
         versionName = "3.0.0"
 
