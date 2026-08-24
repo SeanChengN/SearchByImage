@@ -55,7 +55,8 @@ jobs:
           SEARCHBYIMAGE_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
         run: ./gradlew --no-daemon testDebugUnitTest lintRelease assembleRelease
       - name: Verify APK signature
-        run: "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk
+        run: |
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk
       - name: Prepare release asset
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
