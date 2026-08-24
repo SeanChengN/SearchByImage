@@ -17,6 +17,13 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+      - name: Validate release tag
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version_name=$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)"/\1/p' app/build.gradle.kts)
+          test -n "$version_name"
+          test "$RELEASE_TAG" = "v$version_name"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -56,10 +63,12 @@ jobs:
           safe_tag=${RELEASE_TAG//\//-}
           mkdir release-apk
           cp app/build/outputs/apk/release/app-release.apk "release-apk/SearchByImage-${safe_tag}.apk"
+          cd release-apk
+          sha256sum "SearchByImage-${safe_tag}.apk" > "SearchByImage-${safe_tag}.apk.sha256"
       - uses: actions/upload-artifact@v4
         with:
           name: release-apk
-          path: release-apk/*.apk
+          path: release-apk/*
           if-no-files-found: error
           retention-days: 1
 
@@ -97,4 +106,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: gh release upload "$RELEASE_TAG" release-apk/*.apk
+        run: gh release upload "$RELEASE_TAG" release-apk/* --clobber

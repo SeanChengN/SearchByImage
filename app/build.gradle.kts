@@ -124,6 +124,8 @@ dependencies {
     implementation(libs.cropper)
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.coroutines.android)
 
     ksp(libs.room.compiler)

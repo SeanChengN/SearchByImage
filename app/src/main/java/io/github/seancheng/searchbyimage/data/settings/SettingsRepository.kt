@@ -12,6 +12,17 @@ import kotlinx.coroutines.flow.map
 
 private val Context.settingsDataStore by preferencesDataStore(name = "settings_v3")
 
+internal fun normalizeEngineOrder(ids: List<String>): List<String> {
+    val normalized = ids.distinct().toMutableList()
+    val apiIndex = normalized.indexOf("saucenao")
+    val webIndex = normalized.indexOf("saucenao_web")
+    if (apiIndex >= 0 && webIndex >= 0 && webIndex != apiIndex + 1) {
+        normalized.removeAt(webIndex)
+        normalized.add(normalized.indexOf("saucenao") + 1, "saucenao_web")
+    }
+    return normalized
+}
+
 data class AppSettings(
     val enabledEngineIds: Set<String>,
     val engineOrder: List<String>,
@@ -46,7 +57,7 @@ class SettingsRepository(private val context: Context) {
             ?.split(',')
             ?.filter(String::isNotBlank)
             .orEmpty()
-        val completeOrder = (storedOrder + defaultOrder).distinct()
+        val completeOrder = normalizeEngineOrder(storedOrder + defaultOrder)
         AppSettings(
             enabledEngineIds = enabled,
             engineOrder = completeOrder,
@@ -83,7 +94,7 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setEngineOrder(ids: List<String>) {
         context.settingsDataStore.edit { preferences ->
-            preferences[Keys.engineOrder] = ids.distinct().joinToString(",")
+            preferences[Keys.engineOrder] = normalizeEngineOrder(ids).joinToString(",")
         }
     }
 

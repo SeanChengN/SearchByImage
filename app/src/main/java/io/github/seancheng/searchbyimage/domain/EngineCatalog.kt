@@ -13,7 +13,7 @@ object EngineCatalog {
         EngineDescriptor(
             id = "google_lens",
             name = "Google Lens",
-            summary = "交给 Google 应用识别；不可用时打开官网。",
+            summary = "把处理后的图片直接交给 Google Lens；不可用时提示重新选择。",
             category = EngineCategory.GENERAL,
             mode = EngineMode.EXTERNAL_APP,
             badges = setOf(EngineBadge.AUTOMATIC),
@@ -36,12 +36,19 @@ object EngineCatalog {
             id = "saucenao",
             name = "SauceNAO",
             summary = "使用个人 API Key 返回插画与动漫来源。",
-            category = EngineCategory.SOURCE,
+            category = EngineCategory.ANIME,
             mode = EngineMode.API,
             badges = setOf(EngineBadge.AUTOMATIC, EngineBadge.API_KEY),
             officialUrl = "https://saucenao.com/",
             termsUrl = "https://saucenao.com/terms.php",
             credentialFields = listOf(CredentialField(CredentialIds.SAUCENAO_API_KEY, "API Key")),
+        ),
+        assisted(
+            id = "saucenao_web",
+            name = "SauceNAO 网页版",
+            summary = "无需 API Key，在 SauceNAO 网页中重新选择图片。",
+            category = EngineCategory.ANIME,
+            url = "https://saucenao.com/",
         ),
         EngineDescriptor(
             id = "lenso",
@@ -66,14 +73,6 @@ object EngineCatalog {
             credentialFields = listOf(CredentialField(CredentialIds.TINEYE_API_KEY, "API Key")),
         ),
         assisted(
-            id = "bing",
-            name = "Bing Visual Search",
-            summary = "打开 Bing 移动页面并手动选择图片。",
-            category = EngineCategory.GENERAL,
-            url = "https://www.bing.com/visualsearch",
-            defaultEnabled = true,
-        ),
-        assisted(
             id = "yandex",
             name = "Yandex Images",
             summary = "打开 Yandex 图片搜索并手动上传。",
@@ -84,7 +83,7 @@ object EngineCatalog {
         assisted(
             id = "baidu",
             name = "百度识图",
-            summary = "打开百度识图并手动选择图片。",
+            summary = "打开百度桌面式识图页并手动选择图片。",
             category = EngineCategory.GENERAL,
             url = "https://graph.baidu.com/pcpage/index",
             defaultEnabled = true,
@@ -92,16 +91,9 @@ object EngineCatalog {
         assisted(
             id = "sogou",
             name = "搜狗识图",
-            summary = "打开搜狗图片搜索并手动选择图片。",
+            summary = "打开搜狗桌面式识图页并手动选择图片。",
             category = EngineCategory.GENERAL,
             url = "https://pic.sogou.com/ris",
-        ),
-        assisted(
-            id = "so360",
-            name = "360 识图",
-            summary = "打开 360 图片搜索并手动选择图片。",
-            category = EngineCategory.GENERAL,
-            url = "https://st.so.com/",
         ),
         assisted(
             id = "iqdb",
@@ -110,6 +102,13 @@ object EngineCatalog {
             category = EngineCategory.ANIME,
             url = "https://iqdb.org/",
             defaultEnabled = true,
+        ),
+        assisted(
+            id = "iqdb_3d",
+            name = "3D IQDB",
+            summary = "在 3D IQDB 网页中重新选择图片，搜索 3D 作品来源。",
+            category = EngineCategory.ANIME,
+            url = "https://3d.iqdb.org/",
         ),
         assisted(
             id = "ascii2d",

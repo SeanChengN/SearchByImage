@@ -27,6 +27,7 @@ class AdapterParsingTest {
         assertEquals("测试动画", result.title)
         assertEquals("第 3 集 · 02:05", result.subtitle)
         assertEquals(93.4, result.similarity ?: 0.0, 0.01)
+        assertEquals("https://cdn.example.com/frame.jpg", result.thumbnailUrl)
     }
 
     @Test

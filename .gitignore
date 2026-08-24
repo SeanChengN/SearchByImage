@@ -13,3 +13,4 @@
 .idea/
 google-services.json
 /.recycle-bin/
+/.release-secrets/

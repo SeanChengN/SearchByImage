@@ -12,9 +12,9 @@ io.github.seancheng.searchbyimage
 
 - 从系统分享菜单或照片选择器接收单张图片。
 - 在上传前限制尺寸、修正 EXIF 方向，并重新编码以移除位置和设备元数据。
-- 原生 API 结果：trace.moe；配置个人凭据后支持 SauceNAO、Lenso.ai 与 TinEye。
-- Google Lens 使用系统 URI 授权交给 Google 应用。
-- Bing、Yandex、百度、搜狗、360、IQDB、Ascii2D 使用网页辅助模式。
+- 原生 API 结果：trace.moe，并直接显示匹配画面缩略图；配置个人凭据后支持 SauceNAO、Lenso.ai 与 TinEye。
+- Google Lens 优先调用 Google 应用的 Lens 图片分享入口，再回退到 `google://lens`、`googleapp://lens` 图片契约；每次都授予单张处理后图片的临时读取权限。
+- Yandex、百度、搜狗、IQDB、3D IQDB、SauceNAO 网页版与 Ascii2D 使用网页辅助模式，其中百度和搜狗是桌面式兼容页面。已确认在目标浏览器中无法可靠进入上传结果的 Bing 与 360 识图不再内置。
 - 第三方网页只在 Custom Tabs 中打开；应用不包含通用 WebView 或网页脚本注入。
 - 自定义搜索引擎仅允许 HTTPS multipart POST，并拒绝回环、私网和不安全跳转。
 - API 凭据由 Android Keystore 的 AES-GCM 密钥加密，不备份、不记录。
@@ -24,6 +24,7 @@ io.github.seancheng.searchbyimage
 - Android Studio 2026.1
 - Android Gradle Plugin 9.3.1
 - Gradle 9.5.0
+- Kotlin 2.4.10（AGP 内置 Kotlin / Compose 编译插件）
 - `compileSdk` / `targetSdk`: 37
 - `minSdk`: 29
 - Java/Kotlin 字节码目标：17
@@ -57,7 +58,7 @@ adb shell am start -W -a android.intent.action.MAIN -c android.intent.category.L
 
 `local.properties` 只保存本机 SDK 路径，不应提交。依赖版本集中在 `gradle/libs.versions.toml`，不使用动态版本。
 
-项目仅通过 GitHub Release 分发 APK，不发布到 Google Play。Actions 只在 GitHub Release 发布时触发，先运行单元测试、Release Lint 和 API 29/33/37 仪器测试，再上传已签名 APK；不生成或发布 AAB。仓库需要配置以下 Actions Secrets：
+项目仅通过 GitHub Release 分发 APK，不发布到 Google Play。Actions 只在与 `versionName` 匹配的 GitHub Release 发布时触发，先运行单元测试、Release Lint 和 API 29/33/37 仪器测试，再上传已签名 APK及其 SHA-256 校验文件；不生成或发布 AAB。仓库需要配置以下 Actions Secrets：
 
 - `ANDROID_SIGNING_KEYSTORE_BASE64`
 - `ANDROID_SIGNING_STORE_PASSWORD`

@@ -32,11 +32,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Crop
 import androidx.compose.material.icons.filled.ImageSearch
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
@@ -78,6 +80,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.seancheng.searchbyimage.AppUiState
+import io.github.seancheng.searchbyimage.EngineGuidance
+import io.github.seancheng.searchbyimage.EngineGuidanceAction
 import io.github.seancheng.searchbyimage.EngineItem
 import io.github.seancheng.searchbyimage.domain.EngineBadge
 import io.github.seancheng.searchbyimage.domain.PreparedImage
@@ -85,7 +89,6 @@ import io.github.seancheng.searchbyimage.domain.SearchOutcome
 import io.github.seancheng.searchbyimage.ui.theme.IndigoGlass
 import io.github.seancheng.searchbyimage.ui.theme.PrismViolet
 import io.github.seancheng.searchbyimage.ui.theme.ScanCyan
-import io.github.seancheng.searchbyimage.ui.theme.SearchBlue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -96,7 +99,7 @@ fun HomeScreen(
     onPickImage: () -> Unit,
     onCrop: () -> Unit,
     onSelectEngine: (String) -> Unit,
-    onSearch: () -> Unit,
+    onPrimaryAction: () -> Unit,
     onCancel: () -> Unit,
     onContinueInBackground: () -> Unit,
     onOpenOutcome: (SearchOutcome) -> Unit,
@@ -157,7 +160,7 @@ fun HomeScreen(
                         state = state,
                         selectedEngine = selectedEngine,
                         onChooseEngine = { showEngines = true },
-                        onSearch = onSearch,
+                        onPrimaryAction = onPrimaryAction,
                         onCancel = onCancel,
                         onContinueInBackground = onContinueInBackground,
                         onOpenOutcome = onOpenOutcome,
@@ -186,7 +189,7 @@ fun HomeScreen(
                         state = state,
                         selectedEngine = selectedEngine,
                         onChooseEngine = { showEngines = true },
-                        onSearch = onSearch,
+                        onPrimaryAction = onPrimaryAction,
                         onCancel = onCancel,
                         onContinueInBackground = onContinueInBackground,
                         onOpenOutcome = onOpenOutcome,
@@ -285,13 +288,8 @@ private fun PreviewPanel(
 @Composable
 private fun EmptyPreview(onPickImage: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(
-            Icons.Default.ImageSearch,
-            contentDescription = null,
-            tint = ScanCyan,
-            modifier = Modifier.size(72.dp),
-        )
-        Spacer(Modifier.height(20.dp))
+        EmptyPreviewScan()
+        Spacer(Modifier.height(14.dp))
         Text("从一张图片开始", color = Color.White, style = MaterialTheme.typography.titleLarge)
         Text("支持系统分享和照片选择器", color = Color(0xFFBDC6E8))
         Spacer(Modifier.height(22.dp))
@@ -300,6 +298,74 @@ private fun EmptyPreview(onPickImage: () -> Unit) {
             Spacer(Modifier.width(8.dp))
             Text("选择图片")
         }
+    }
+}
+
+@Composable
+private fun EmptyPreviewScan() {
+    val animationsEnabled = remember { ValueAnimator.areAnimatorsEnabled() }
+    val transition = rememberInfiniteTransition(label = "empty preview")
+    val scanProgress by transition.animateFloat(
+        initialValue = 0.12f,
+        targetValue = 0.88f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2_400, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "empty scan position",
+    )
+    val pulseProgress by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1_600),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "empty focus pulse",
+    )
+    val displayedScan = if (animationsEnabled) scanProgress else 0.5f
+    val displayedPulse = if (animationsEnabled) pulseProgress else 0.5f
+
+    Box(
+        modifier = Modifier
+            .size(148.dp)
+            .semantics { contentDescription = "等待选择图片的扫描预览" },
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.fillMaxSize()) {
+            val inset = 8.dp.toPx()
+            val corner = 28.dp.toPx()
+            val stroke = 2.dp.toPx()
+            val left = inset
+            val top = inset
+            val right = size.width - inset
+            val bottom = size.height - inset
+            val frameColor = ScanCyan.copy(alpha = 0.68f)
+
+            drawLine(frameColor, Offset(left, top + corner), Offset(left, top), stroke, StrokeCap.Round)
+            drawLine(frameColor, Offset(left, top), Offset(left + corner, top), stroke, StrokeCap.Round)
+            drawLine(frameColor, Offset(right - corner, top), Offset(right, top), stroke, StrokeCap.Round)
+            drawLine(frameColor, Offset(right, top), Offset(right, top + corner), stroke, StrokeCap.Round)
+            drawLine(frameColor, Offset(left, bottom - corner), Offset(left, bottom), stroke, StrokeCap.Round)
+            drawLine(frameColor, Offset(left, bottom), Offset(left + corner, bottom), stroke, StrokeCap.Round)
+            drawLine(frameColor, Offset(right - corner, bottom), Offset(right, bottom), stroke, StrokeCap.Round)
+            drawLine(frameColor, Offset(right, bottom), Offset(right, bottom - corner), stroke, StrokeCap.Round)
+
+            drawCircle(
+                color = PrismViolet.copy(alpha = 0.14f + displayedPulse * 0.12f),
+                radius = 34.dp.toPx() + displayedPulse * 5.dp.toPx(),
+                style = Stroke(width = 1.5.dp.toPx()),
+            )
+            val y = top + (bottom - top) * displayedScan
+            drawLine(ScanCyan.copy(alpha = 0.22f), Offset(left, y), Offset(right, y), 12.dp.toPx())
+            drawLine(ScanCyan.copy(alpha = 0.86f), Offset(left, y), Offset(right, y), 1.5.dp.toPx())
+        }
+        Icon(
+            Icons.Default.ImageSearch,
+            contentDescription = null,
+            tint = ScanCyan,
+            modifier = Modifier.size(54.dp),
+        )
     }
 }
 
@@ -372,7 +438,7 @@ private fun SearchControls(
     state: AppUiState,
     selectedEngine: EngineItem?,
     onChooseEngine: () -> Unit,
-    onSearch: () -> Unit,
+    onPrimaryAction: () -> Unit,
     onCancel: () -> Unit,
     onContinueInBackground: () -> Unit,
     onOpenOutcome: (SearchOutcome) -> Unit,
@@ -393,15 +459,7 @@ private fun SearchControls(
                 modifier = Modifier.padding(18.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
-                    Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(SearchBlue),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(Icons.Default.ImageSearch, contentDescription = null, tint = Color.White)
-                }
+                EngineBrandMark(selectedEngine?.descriptor)
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text(selectedEngine?.descriptor?.name ?: "没有已启用引擎", fontWeight = FontWeight.Bold)
@@ -416,7 +474,7 @@ private fun SearchControls(
                 Icon(Icons.Default.ArrowDropDown, contentDescription = "选择引擎")
             }
         }
-        selectedEngine?.let { BadgeRow(it.descriptor.badges) }
+        state.guidance?.let { EngineGuidanceCard(it) }
 
         if (state.isSearching) {
             Button(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {
@@ -432,18 +490,56 @@ private fun SearchControls(
                 }
             }
         } else {
+            val guidance = state.guidance
+            val canRunPrimaryAction = when (guidance?.action) {
+                EngineGuidanceAction.CONFIGURE_CREDENTIALS -> selectedEngine != null
+                null -> false
+                else -> state.image != null && selectedEngine != null && !state.isPreparingImage
+            }
             Button(
-                onClick = onSearch,
-                enabled = state.image != null && selectedEngine != null && !state.isPreparingImage,
+                onClick = onPrimaryAction,
+                enabled = canRunPrimaryAction,
                 modifier = Modifier.fillMaxWidth().height(54.dp),
             ) {
-                Icon(Icons.Default.ImageSearch, contentDescription = null)
+                Icon(
+                    when (guidance?.action) {
+                        EngineGuidanceAction.CONFIGURE_CREDENTIALS -> Icons.Default.Key
+                        EngineGuidanceAction.OPEN_EXTERNAL,
+                        EngineGuidanceAction.OPEN_WEB,
+                        -> Icons.AutoMirrored.Filled.OpenInNew
+                        else -> Icons.Default.ImageSearch
+                    },
+                    contentDescription = null,
+                )
                 Spacer(Modifier.width(10.dp))
-                Text("用 ${selectedEngine?.descriptor?.name ?: "所选引擎"} 搜索")
+                Text(guidance?.primaryActionLabel ?: "选择搜索引擎")
             }
         }
 
         state.outcome?.let { OutcomeCard(it, onOpenOutcome) }
+    }
+}
+
+@Composable
+private fun EngineGuidanceCard(guidance: EngineGuidance) {
+    ElevatedCard(
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.72f),
+        ),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                guidance.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                guidance.detail,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
     }
 }
 
@@ -487,6 +583,8 @@ private fun EngineChoiceRow(item: EngineItem, selected: Boolean, onClick: () -> 
             .padding(horizontal = 24.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        EngineBrandMark(item.descriptor, size = 38.dp)
+        Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(item.descriptor.name, fontWeight = FontWeight.Bold)
             Text(item.descriptor.summary, color = MaterialTheme.colorScheme.onSurfaceVariant)

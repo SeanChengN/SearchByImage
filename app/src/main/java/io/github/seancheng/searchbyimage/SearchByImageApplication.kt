@@ -7,8 +7,13 @@ import android.content.Intent
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.request.crossfade
+import io.github.seancheng.searchbyimage.data.network.HttpClientProvider
 
-class SearchByImageApplication : Application() {
+class SearchByImageApplication : Application(), SingletonImageLoader.Factory {
     val container: AppContainer by lazy { AppContainer(this) }
 
     override fun onCreate() {
@@ -16,6 +21,22 @@ class SearchByImageApplication : Application() {
         createNotificationChannel()
         publishDynamicShortcut()
     }
+
+    override fun newImageLoader(context: android.content.Context): ImageLoader = ImageLoader.Builder(context)
+        .crossfade(true)
+        .components {
+            add(
+                OkHttpNetworkFetcherFactory(
+                    callFactory = {
+                        HttpClientProvider.client.newBuilder()
+                            .followRedirects(false)
+                            .followSslRedirects(false)
+                            .build()
+                    },
+                ),
+            )
+        }
+        .build()
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(

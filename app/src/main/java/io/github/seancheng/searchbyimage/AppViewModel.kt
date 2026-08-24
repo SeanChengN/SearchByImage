@@ -28,10 +28,13 @@ import io.github.seancheng.searchbyimage.worker.BackgroundSearchWorker
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -60,7 +63,18 @@ data class AppUiState(
     val outcome: SearchOutcome? = null,
     val message: String? = null,
     val configuredCredentials: Set<String> = emptySet(),
+    val guidance: EngineGuidance? = null,
 )
+
+sealed interface AppEffect {
+    data object NavigateToCredentials : AppEffect
+    data object NavigateToResults : AppEffect
+    data class OpenOutcome(
+        val outcome: SearchOutcome,
+        val imageUri: Uri?,
+        val mimeType: String?,
+    ) : AppEffect
+}
 
 class AppViewModel(
     application: Application,
@@ -68,6 +82,8 @@ class AppViewModel(
 ) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(AppUiState())
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
+    private val _effects = MutableSharedFlow<AppEffect>(replay = 0, extraBufferCapacity = 1)
+    val effects: SharedFlow<AppEffect> = _effects.asSharedFlow()
     private var searchJob: Job? = null
 
     init {
@@ -86,15 +102,21 @@ class AppViewModel(
                         EngineItem(engine.toDescriptor(), engine.enabled, engine)
                     }
                     val enabledIds = engineItems.filter { it.enabled }.map { it.descriptor.id }
+                    val configuredCredentials = configuredCredentialIds()
                     _uiState.update { current ->
+                        val selectedEngineId = current.selectedEngineId.takeIf { it in enabledIds }
+                            ?: settings.defaultEngineId.takeIf { it in enabledIds }
+                            ?: enabledIds.firstOrNull()
+                            ?: current.selectedEngineId
                         current.copy(
                             settings = settings,
                             engines = engineItems,
-                            selectedEngineId = current.selectedEngineId.takeIf { it in enabledIds }
-                                ?: settings.defaultEngineId.takeIf { it in enabledIds }
-                                ?: enabledIds.firstOrNull()
-                                ?: current.selectedEngineId,
-                            configuredCredentials = configuredCredentialIds(),
+                            selectedEngineId = selectedEngineId,
+                            configuredCredentials = configuredCredentials,
+                            guidance = engineGuidanceFor(
+                                engineItems.firstOrNull { it.descriptor.id == selectedEngineId }?.descriptor,
+                                configuredCredentials,
+                            ),
                         )
                     }
                 }
@@ -122,12 +144,46 @@ class AppViewModel(
     }
 
     fun selectEngine(id: String) {
-        if (_uiState.value.engines.any { it.descriptor.id == id && it.enabled }) {
-            _uiState.update { it.copy(selectedEngineId = id, outcome = null) }
+        val selected = _uiState.value.engines.firstOrNull { it.descriptor.id == id && it.enabled }
+        if (selected != null) {
+            _uiState.update {
+                it.copy(
+                    selectedEngineId = id,
+                    outcome = null,
+                    guidance = engineGuidanceFor(selected.descriptor, it.configuredCredentials),
+                )
+            }
         }
     }
 
-    fun search() {
+    fun performPrimaryAction() {
+        when (_uiState.value.guidance?.action) {
+            EngineGuidanceAction.CONFIGURE_CREDENTIALS -> {
+                _effects.tryEmit(AppEffect.NavigateToCredentials)
+            }
+
+            EngineGuidanceAction.OPEN_EXTERNAL,
+            EngineGuidanceAction.OPEN_WEB,
+            -> openSelectedEngine()
+
+            EngineGuidanceAction.SEARCH -> search()
+            null -> showMessage("请先选择一个搜索引擎")
+        }
+    }
+
+    private fun openSelectedEngine() {
+        val state = _uiState.value
+        val image = state.image ?: run {
+            showMessage("请先选择一张图片")
+            return
+        }
+        viewModelScope.launch {
+            val outcome = container.searchCoordinator.search(state.selectedEngineId, image)
+            handleOutcome(outcome, image)
+        }
+    }
+
+    private fun search() {
         if (_uiState.value.isBackgroundSearching) {
             showMessage("已有一项后台搜索正在进行，请先取消或等待完成")
             return
@@ -142,11 +198,35 @@ class AppViewModel(
             _uiState.update { it.copy(isSearching = true, outcome = null, message = null) }
             try {
                 val outcome = container.searchCoordinator.search(engineId, image)
-                _uiState.update { it.copy(isSearching = false, outcome = outcome) }
+                handleOutcome(outcome, image)
             } catch (cancelled: CancellationException) {
                 _uiState.update { it.copy(isSearching = false) }
                 throw cancelled
             }
+        }
+    }
+
+    private fun handleOutcome(outcome: SearchOutcome, image: PreparedImage) {
+        when (outcome) {
+            is SearchOutcome.NativeResults -> {
+                _uiState.update { it.copy(isSearching = false, outcome = outcome) }
+                _effects.tryEmit(AppEffect.NavigateToResults)
+            }
+
+            is SearchOutcome.AuthRequired -> {
+                _uiState.update { it.copy(isSearching = false, outcome = null) }
+                _effects.tryEmit(AppEffect.NavigateToCredentials)
+            }
+
+            is SearchOutcome.WebResult,
+            is SearchOutcome.ExternalApp,
+            is SearchOutcome.AssistedWeb,
+            -> {
+                _uiState.update { it.copy(isSearching = false, outcome = null) }
+                _effects.tryEmit(AppEffect.OpenOutcome(outcome, image.contentUri, image.mimeType))
+            }
+
+            is SearchOutcome.Error -> _uiState.update { it.copy(isSearching = false, outcome = outcome) }
         }
     }
 
@@ -301,8 +381,13 @@ class AppViewModel(
     fun saveCredential(id: String, value: String) {
         container.credentialStore.put(id, value)
         _uiState.update {
+            val configuredCredentials = configuredCredentialIds()
             it.copy(
-                configuredCredentials = configuredCredentialIds(),
+                configuredCredentials = configuredCredentials,
+                guidance = engineGuidanceFor(
+                    it.engines.firstOrNull { engine -> engine.descriptor.id == it.selectedEngineId }?.descriptor,
+                    configuredCredentials,
+                ),
                 message = if (value.isBlank()) "凭据已移除" else "凭据已安全保存",
             )
         }

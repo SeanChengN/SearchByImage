@@ -17,6 +17,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
@@ -51,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import io.github.seancheng.searchbyimage.AppUiState
 import io.github.seancheng.searchbyimage.EngineItem
 import io.github.seancheng.searchbyimage.data.db.CustomEngine
+import io.github.seancheng.searchbyimage.domain.EngineCategory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,6 +67,12 @@ fun EnginesScreen(
     onEditCustom: (CustomEngine) -> Unit,
     onOpenUrl: (String) -> Unit,
 ) {
+    var expandedCategoryNames by rememberSaveable { mutableStateOf("") }
+    val expandedCategories = expandedCategoryNames
+        .split(',')
+        .filter(String::isNotBlank)
+        .toSet()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -101,27 +110,72 @@ fun EnginesScreen(
                     }
                 }
             }
-            val grouped = state.engines.groupBy { it.descriptor.category }
-            grouped.forEach { (category, engines) ->
+            EngineCategory.entries.forEach { category ->
+                val engines = state.engines.filter { it.descriptor.category == category }
+                if (engines.isEmpty()) return@forEach
+                val expanded = category.name in expandedCategories
                 item {
-                    Text(
-                        category.label,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 12.dp),
+                    EngineCategoryHeader(
+                        category = category,
+                        enabledCount = engines.count(EngineItem::enabled),
+                        totalCount = engines.size,
+                        expanded = expanded,
+                        onToggle = {
+                            expandedCategoryNames = if (expanded) {
+                                (expandedCategories - category.name).sorted().joinToString(",")
+                            } else {
+                                (expandedCategories + category.name).sorted().joinToString(",")
+                            }
+                        },
                     )
                 }
-                items(engines, key = { it.descriptor.id }) { item ->
-                    EngineManageCard(
-                        item = item,
-                        isDefault = state.settings.defaultEngineId == item.descriptor.id,
-                        onToggle = { onToggle(item.descriptor.id, it) },
-                        onDefault = { onDefault(item.descriptor.id) },
-                        onEdit = item.customEngine?.let { engine -> { onEditCustom(engine) } },
-                        onOpenUrl = onOpenUrl,
-                    )
+                if (expanded) {
+                    items(engines, key = { it.descriptor.id }) { item ->
+                        EngineManageCard(
+                            item = item,
+                            isDefault = state.settings.defaultEngineId == item.descriptor.id,
+                            onToggle = { onToggle(item.descriptor.id, it) },
+                            onDefault = { onDefault(item.descriptor.id) },
+                            onEdit = item.customEngine?.let { engine -> { onEditCustom(engine) } },
+                            onOpenUrl = onOpenUrl,
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun EngineCategoryHeader(
+    category: EngineCategory,
+    enabledCount: Int,
+    totalCount: Int,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+) {
+    Card(
+        onClick = onToggle,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(category.label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    "$enabledCount / $totalCount 已启用",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = if (expanded) "折叠${category.label}" else "展开${category.label}",
+                tint = MaterialTheme.colorScheme.primary,
+            )
         }
     }
 }
@@ -143,6 +197,8 @@ private fun EngineManageCard(
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                EngineBrandMark(item.descriptor, size = 42.dp)
+                Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(item.descriptor.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text(item.descriptor.summary, color = MaterialTheme.colorScheme.onSurfaceVariant)
